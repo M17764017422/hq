@@ -13,6 +13,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      
+    - name: install setuptools
+      run: pip install --upgrade setuptools
     - name: python3 -m pip install meson
       run: python3 -m pip install meson
     - name: apt-get install ninja-build
