@@ -13,14 +13,15 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      
+    - name: apt-get install ninja-build
+      run: sudo apt-get install python3 python3-pip ninja-build -y
     - name: python -m pip install --upgrade pip
-      run: python3 -m pip3 install --upgrade pip
+      run: pip3 install --upgrade pip
     - name: install setuptools
-      run: pip install --upgrade setuptools
+      run: pip3 install --upgrade setuptools
     - name: python3 -m pip install meson
       run: python3 -m pip install meson
-    - name: apt-get install ninja-build
-      run: sudo apt-get install ninja-build -y
     - name: meson build
       run: meson build 
     - name: ninja -C build
