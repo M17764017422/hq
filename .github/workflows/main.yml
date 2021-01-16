@@ -20,7 +20,7 @@ jobs:
     - name: python3 -m pip install meson
       run: python3 -m pip install meson
     - name: apt-get install ninja-build
-      run: apt-get install ninja-build
+      run: sudo apt-get install ninja-build -y
     - name: meson build
       run: meson build 
     - name: ninja -C build
