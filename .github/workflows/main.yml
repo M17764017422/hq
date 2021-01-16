@@ -20,8 +20,8 @@ jobs:
       run: pip3 install --upgrade pip
     - name: install setuptools
       run: pip3 install --upgrade setuptools
-    - name: python3 -m pip install meson
-      run: python3 -m pip install meson
+    - name: install meson
+      run: python3 -m pip3 install --user meson
     - name: meson build
       run: meson build 
     - name: ninja -C build
