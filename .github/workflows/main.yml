@@ -14,7 +14,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: python -m pip install --upgrade pip
-      run: python3 -m pip install --upgrade pip
+      run: python3 -m pip3 install --upgrade pip
     - name: install setuptools
       run: pip install --upgrade setuptools
     - name: python3 -m pip install meson
