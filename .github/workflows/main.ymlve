@@ -13,7 +13,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-      with:
+      env:
         PATH: "${PATH}:/home/runner/.local/bin"
     - run: export -p
     - name: apt-get install ninja-build
