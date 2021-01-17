@@ -13,6 +13,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - run: export PATH=${PATH}:${HOME}/.local/bin
     - run: export -p
     - name: apt-get install ninja-build
       run: sudo apt-get install python3 python3-pip ninja-build -y
@@ -21,8 +22,7 @@ jobs:
     - name: install setuptools
       run: pip3 install --upgrade setuptools
     - name: install meson
-    - run: export PATH=${PATH}:${HOME}/.local/bin
-    - run: python3 -m pip install --user meson
+      run: python3 -m pip install --user meson
     - name: meson build
       run: meson build 
     - name: ninja -C build
