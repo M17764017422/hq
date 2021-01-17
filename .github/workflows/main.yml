@@ -21,7 +21,8 @@ jobs:
     - name: install setuptools
       run: pip3 install --upgrade setuptools
     - name: install meson
-      run: python3 -m pip install --user meson
+    - run: export PATH=${PATH}:${HOME}/.local/bin
+    - run: python3 -m pip install --user meson
     - name: meson build
       run: meson build 
     - name: ninja -C build
