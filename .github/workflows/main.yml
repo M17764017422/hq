@@ -16,6 +16,11 @@ jobs:
     steps:
     - name: Setup MSYS2
       uses: msys2/setup-msys2@v2
+      with:
+          msystem: MINGW64
+          update: true
+          install: git mingw-w64-x86_64-toolchain
+          
     - run: git clone https://github.com/lexborisov/Modest.git 
     - run: cd Modest&&make&&sudo make install&&cd ../
     - run: export -p
