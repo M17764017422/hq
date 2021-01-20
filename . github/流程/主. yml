@@ -20,7 +20,7 @@ jobs:
     - name: python -m pip install --upgrade pip
       run: pip3 install --upgrade pip
     - name: install setuptools
-      run: pip3 -m install --upgrade --user setuptools
+      run: python3 -m pip install --upgrade --user setuptools
     - name: install meson
       run: python3 -m pip install --user meson
     - name: 配置 meson
