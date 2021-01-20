@@ -16,17 +16,13 @@ jobs:
     - run: git clone https://github.com/lexborisov/Modest.git 
     - run: cd Modest&&make&&sudo make install&&cd ../
     - run: export -p
-    - name: apt-get install ninja-build
-      run: sudo apt-get install python3 python3-pip ninja-build pkg-config cmake checkinstall -y
-    - name: python -m pip install --upgrade pip
-      run: pip3 install --upgrade pip
-    - name: install setuptools
-      run: python3 -m pip install --upgrade --user setuptools
-    - name: install meson
-      run: python3 -m pip install --user meson
+    - run: sudo apt-get install python3 python3-pip ninja-build pkg-config cmake checkinstall -y
+    - run: python3 -m pip install --upgrade pip
+    - run: python3 -m pip install --upgrade --user setuptools
+    - run: python3 -m pip install --user meson
+    - uses: actions/ks@v2
     - name: 配置 meson
       run: sudo update-alternatives --install /usr/bin/meson meson /home/runner/.local/bin/meson 1088
-
     - name: meson build
       run: PATH=${PATH}:/home/runner/.local/bin&&meson build 
     - name: ninja -C build
