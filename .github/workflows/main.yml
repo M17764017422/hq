@@ -22,7 +22,9 @@ jobs:
           path-type: inherit
           install: mingw-w64-x86_64-toolchain 
     
-    - run: export -p& git clone https://github.com/lexborisov/Modest.git && cd Modest&&make clean&&make -j4 MyCORE_BUILD_WITHOUT_THREADS=YES
+    - run: export -p&&git clone https://github.com/lexborisov/Modest.git 
+    - run: cd Modest&&make clean
+    - run: cd Modest&&make -j4 MyCORE_BUILD_WITHOUT_THREADS=YES
     - run: cd Modest&&make test
     - run: cd Modest&&make install
     #- run: cd ..    
