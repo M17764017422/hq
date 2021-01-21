@@ -35,7 +35,7 @@ jobs:
     - run: python3 -m pip install --user meson
     #- uses: actions/checkout@v2
     - name: 配置 meson
-      run: ls ${PATH}:${USERPROFILE}\\.local\\bin
+      run: ls ${USERPROFILE}\\.local\\bin
      # run: sudo update-alternatives --install /usr/bin/meson meson /home/runner/.local/bin/meson 1088
     - name: meson build
       run: PATH=${PATH}:${USERPROFILE}\\.local\\bin&&meson build 
