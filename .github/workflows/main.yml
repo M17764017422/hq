@@ -37,8 +37,9 @@ jobs:
     #- name: 配置 meson
      # run: sudo update-alternatives --install /usr/bin/meson meson /home/runner/.local/bin/meson 1088
     - name: meson build
-      run: PATH=${PATH}:/home/runner/.local/bin&&meson build 
+      run: meson build 
     - name: ninja -C build
       run: ninja -C build
     - name: 测试
       run: ./build/hq -h
+#PATH=${PATH}:/home/runner/.local/bin&&
