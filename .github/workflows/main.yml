@@ -27,6 +27,7 @@ jobs:
     - run: cd Modest&&make library  
     #- run: cd Modest&&make create&&make test
     - run: cd Modest&&make install
+    - run: export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
     #- run: cd ..    
     #- run: sudo apt-get install python3 python3-pip ninja-build pkg-config cmake checkinstall -y
     - run: python3 -m ensurepip
