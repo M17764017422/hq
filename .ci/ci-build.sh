@@ -8,11 +8,12 @@ make install
 export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}
 cd ..    
 #sudo apt-get install python3 python3-pip ninja-build pkg-config cmake checkinstall -y
+export PATH=${USERPROFILE}\\.local\\bin:${PATH}
 python3 -m ensurepip
 python3 -m pip install --upgrade pip
 python3 -m pip install --upgrade --user setuptools
 python3 -m pip install --user meson
-export PATH=${USERPROFILE}\\.local\\bin:${PATH}
+export -p PATH
 ls 
 # run: sudo update-alternatives --install /usr/bin/meson meson /home/runner/.local/bin/meson 1088
 meson build 
