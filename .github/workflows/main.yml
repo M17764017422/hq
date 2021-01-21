@@ -23,26 +23,5 @@ jobs:
           install: mingw-w64-x86_64-toolchain 
     - uses: actions/checkout@v2
     - run: export -p&&git clone https://github.com/lexborisov/Modest.git 
-    - run: cd Modest&&make clean
-    - run: cd Modest&&make library  
-    #- run: cd Modest&&make create&&make test
-    - run: cd Modest&&make install
-    - run: export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
-    #- run: cd ..    
-    #- run: sudo apt-get install python3 python3-pip ninja-build pkg-config cmake checkinstall -y
-    - run: python3 -m ensurepip
-    - run: python3 -m pip install --upgrade pip
-    - run: python3 -m pip install --upgrade --user setuptools
-    - run: python3 -m pip install --user meson
-    - run: ls
-    #- uses: actions/checkout@v2
-    - name: 配置 meson
-      run: ls ${USERPROFILE}\\.local\\bin
-     # run: sudo update-alternatives --install /usr/bin/meson meson /home/runner/.local/bin/meson 1088
-    - name: meson build
-      run: PATH=${PATH}:${USERPROFILE}\\.local\\bin&&${USERPROFILE}\\.local\\bin\\meson build 
-    - name: ninja -C build
-      run: ninja -C build
-    - name: 测试
-      run: ./build/hq -h
-#PATH=${PATH}:${USERPROFILE}/.local/bin&&
+    - name: ci-build.sh
+      run: ./.ci/ci-build.sh
