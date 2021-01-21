@@ -24,7 +24,7 @@ jobs:
     - uses: actions/checkout@v2
     - run: export -p&&git clone https://github.com/lexborisov/Modest.git 
     - run: cd Modest&&make clean
-    - run: cd Modest&&make static 
+    - run: cd Modest&&make library  
     #- run: cd Modest&&make create&&make test
     - run: cd Modest&&make install
     #- run: cd ..    
