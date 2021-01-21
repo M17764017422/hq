@@ -21,7 +21,7 @@ jobs:
           update: true
           path-type: inherit
           install: mingw-w64-x86_64-toolchain 
-    
+    - uses: actions/checkout@v2
     - run: export -p&&git clone https://github.com/lexborisov/Modest.git 
     - run: cd Modest&&make clean
     - run: cd Modest&&make static 
