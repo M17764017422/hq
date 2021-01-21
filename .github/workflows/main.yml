@@ -33,6 +33,7 @@ jobs:
     - run: python3 -m pip install --upgrade pip
     - run: python3 -m pip install --upgrade --user setuptools
     - run: python3 -m pip install --user meson
+    - run: ls
     #- uses: actions/checkout@v2
     - name: 配置 meson
       run: ls ${USERPROFILE}\\.local\\bin
