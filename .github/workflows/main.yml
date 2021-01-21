@@ -24,7 +24,7 @@ jobs:
     
     - run: export -p&&git clone https://github.com/lexborisov/Modest.git 
     - run: cd Modest&&make clean
-    - run: cd Modest&&make static -j4 MyCORE_BUILD_WITHOUT_THREADS=YES
+    - run: cd Modest&&make static 
     #- run: cd Modest&&make create&&make test
     - run: cd Modest&&make install
     #- run: cd ..    
@@ -34,8 +34,8 @@ jobs:
     - run: python3 -m pip install --upgrade --user setuptools
     - run: python3 -m pip install --user meson
     - uses: actions/checkout@v2
-    - name: 配置 meson
-      run: sudo update-alternatives --install /usr/bin/meson meson /home/runner/.local/bin/meson 1088
+    #- name: 配置 meson
+     # run: sudo update-alternatives --install /usr/bin/meson meson /home/runner/.local/bin/meson 1088
     - name: meson build
       run: PATH=${PATH}:/home/runner/.local/bin&&meson build 
     - name: ninja -C build
