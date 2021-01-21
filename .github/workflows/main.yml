@@ -33,7 +33,7 @@ jobs:
     - run: python3 -m pip install --upgrade pip
     - run: python3 -m pip install --upgrade --user setuptools
     - run: python3 -m pip install --user meson
-    - uses: actions/checkout@v2
+    #- uses: actions/checkout@v2
     #- name: 配置 meson
      # run: sudo update-alternatives --install /usr/bin/meson meson /home/runner/.local/bin/meson 1088
     - name: meson build
