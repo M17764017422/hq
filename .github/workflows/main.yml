@@ -24,8 +24,7 @@ jobs:
           
     - run: export -p
     - run: git clone https://github.com/lexborisov/Modest.git 
-    - run: cd Modest&&make -j4 prefix=/usr MyCORE_BUILD_WITHOUT_THREADS=YES&&sudo make install&&cd ../
-    
+    - run: cd Modest&&make -j4 MyCORE_BUILD_WITHOUT_THREADS=YES&&sudo make install&&cd ..    
     - run: sudo apt-get install python3 python3-pip ninja-build pkg-config cmake checkinstall -y
     - run: python3 -m pip install --upgrade pip
     - run: python3 -m pip install --upgrade --user setuptools
