@@ -11,10 +11,14 @@ cd ..
 export PATH=${USERPROFILE}\\.local\\bin:${PATH}
 python3 -m ensurepip
 python3 -m pip install --upgrade pip
+echo 安装结束
 python3 -m pip install --upgrade --user setuptools
+echo 安装结束
 python3 -m pip install --user meson
-pip3 install ninja
-export -p PATH
+echo 安装结束
+python3 -m pip install --user ninja
+echo 安装结束
+export -p
 ls 
 # run: sudo update-alternatives --install /usr/bin/meson meson /home/runner/.local/bin/meson 1088
 meson build 
