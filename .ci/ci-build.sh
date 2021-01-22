@@ -7,9 +7,11 @@ make modules
 make install
 export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}
 cd ..    
-#sudo apt-get install python3 python3-pip ninja-build pkg-config cmake checkinstall -y
-export PATH=${USERPROFILE}\\.local\\bin:${PATH}
+echo 安装结束
+#sudo apt-get install python3 python3-pip ninja-build cmake pkg-config checkinstall -y
+export PATH=${USERPROFILE}\.local\bin:${PATH}
 python3 -m ensurepip
+echo 安装结束
 python3 -m pip install --upgrade pip
 echo 安装结束
 python3 -m pip install --upgrade --user setuptools
