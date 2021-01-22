@@ -20,7 +20,8 @@ jobs:
           msystem: MINGW64
           update: true
           path-type: inherit
-          install: mingw-w64-x86_64-toolchain cmake
+          install: mingw-w64-x86_64-toolchain ninja-build cmake
+          #python3 python3-pip ninja-build cmake pkg-config checkinstall -y
     - uses: actions/checkout@v2
     - run: export -p&&git clone https://github.com/lexborisov/Modest.git 
     - name: ci-build.sh
