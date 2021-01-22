@@ -25,6 +25,7 @@ export -p
 ls 
 # run: sudo update-alternatives --install /usr/bin/meson meson /home/runner/.local/bin/meson 1088
 meson build 
+echo 编译结束
     #- name: ninja -C buil
 ninja -C build
 #    - name: 测试
