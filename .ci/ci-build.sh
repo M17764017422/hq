@@ -13,6 +13,7 @@ python3 -m ensurepip
 python3 -m pip install --upgrade pip
 python3 -m pip install --upgrade --user setuptools
 python3 -m pip install --user meson
+sudo pip3 install ninja
 export -p PATH
 ls 
 # run: sudo update-alternatives --install /usr/bin/meson meson /home/runner/.local/bin/meson 1088
