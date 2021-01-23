@@ -1,6 +1,6 @@
 cd Modest
 make clean
-make all
+make static
 make create
 make test
 make modules
