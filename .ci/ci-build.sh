@@ -1,4 +1,7 @@
+export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}
+export PATH=/c/Users/runneradmin/.local/bin:/usr/local/lib:${PATH}
 cd Modest
+make uninstall
 make clean
 make static
 make create
@@ -6,12 +9,12 @@ make test
 make modules
 make clone 
 make install
-export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}
+
 cd ..    
 echo 安装结束
 #sudo apt-get install python3 python3-pip ninja-build cmake pkg-config checkinstall -y
 #export PATH=/c/Users/runneradmin/.local/bin:${PATH}
-export PATH=/c/Users/runneradmin/.local/bin:/usr/local/lib:${PATH}
+#export PATH=/c/Users/runneradmin/.local/bin:/usr/local/lib:${PATH}
 python3 -m ensurepip
 echo 安装结束
 python3 -m pip install --upgrade pip
