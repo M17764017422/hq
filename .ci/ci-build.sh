@@ -19,7 +19,7 @@ python3 -m pip install --upgrade --user setuptools
 echo 安装结束
 python3 -m pip install --user meson
 echo 安装结束
-python3 -m pip install --user ninja
+#python3 -m pip install --user ninja
 echo 安装结束
 export -p
 ls 
