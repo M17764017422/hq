@@ -34,5 +34,5 @@ ninja -C build
  ls ./build
 tar -czvf hq.gz ./build
 ls
-curl -T hq.gz -u ptcyklj2a7l6:86cab30df80c3fad617a45a8d9a1ac2025314ea4 "https://m17764017422-generic.pkg.coding.net/import-ayr6/build/hq.gz
+curl -T hq.gz -u ptcyklj2a7l6:86cab30df80c3fad617a45a8d9a1ac2025314ea4 "https://m17764017422-generic.pkg.coding.net/import-ayr6/build/hq.gz" -v
 ls -r
