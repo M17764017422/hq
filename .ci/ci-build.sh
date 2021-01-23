@@ -10,8 +10,8 @@ export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}
 cd ..    
 echo 安装结束
 #sudo apt-get install python3 python3-pip ninja-build cmake pkg-config checkinstall -y
-export PATH=/c/Users/runneradmin/.local/bin:${PATH}
-#export PATH=/c/Users/runneradmin/.local/bin:/usr/local/lib:${PATH}
+#export PATH=/c/Users/runneradmin/.local/bin:${PATH}
+export PATH=/c/Users/runneradmin/.local/bin:/usr/local/lib:${PATH}
 python3 -m ensurepip
 echo 安装结束
 python3 -m pip install --upgrade pip
@@ -32,4 +32,7 @@ ninja -C build
 #    - name: 测试
  ./build/hq -h
  ls ./build
-#PATH=${PATH}:${USERPROFILE}/.local/bin&&
+tar -czvf hq.gz ./build
+ls
+curl -T hq.gz -u ptcyklj2a7l6:86cab30df80c3fad617a45a8d9a1ac2025314ea4 "https://m17764017422-generic.pkg.coding.net/import-ayr6/build/hq.gz
+ #PATH=${PATH}:${USERPROFILE}/.local/bin&&
