@@ -30,4 +30,5 @@ echo 编译结束
 ninja -C build
 #    - name: 测试
  ./build/hq -h
+ ls ./build
 #PATH=${PATH}:${USERPROFILE}/.local/bin&&
