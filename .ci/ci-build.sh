@@ -31,6 +31,7 @@ echo 编译结束
 ninja -C build
 #    - name: 测试
  ./build/hq -h
+ cp libgcc_s_seh-1.dll libstdc++-6.dll libmodest-0.dll ./build
  ls ./build
 tar -czvf hq.gz ./build
 ls
