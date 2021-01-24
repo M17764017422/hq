@@ -1,4 +1,4 @@
-project('hq', 'cpp', default_options: ['-v','cpp_std=c++17'])
+project('hq', 'cpp', default_options: ['cpp_std=c++17'])
 modest = dependency('modest')
 add_global_link_arguments(language:'cpp','-Bstatic,--whole-archive','-lstdc++','-lgcc_eh','-lpthread')
 executable('hq', 'main.cpp',
