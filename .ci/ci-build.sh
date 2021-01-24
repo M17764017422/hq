@@ -15,7 +15,9 @@ make modules
 echo 显示模块信息完成
 #make clone 
 make install
-
+echo 安装完成
+ls -arh /usr/local/bin
+ls -arh /usr/local/lib
 cd ..    
 echo 安装结束
 #sudo apt-get install python3 python3-pip ninja-build cmake pkg-config checkinstall -y
@@ -31,8 +33,8 @@ python3 -m pip install --user meson
 echo 安装结束
 #python3 -m pip install --user ninja
 echo 安装结束
-export -p
-ls 
+##export -p
+ls -arh
 # run: sudo update-alternatives --install /usr/bin/meson meson /home/runner/.local/bin/meson 1088
 meson build 
 echo 编译结束
