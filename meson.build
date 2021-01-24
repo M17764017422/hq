@@ -1,5 +1,6 @@
 project('hq', 'cpp', default_options: ['cpp_std=c++17'])
 modest = dependency('modest')
-executable('hq', 'main.cpp',cpp_args: ['-Wl,-Bstatic,--whole-archive','-lstdc++','-lgcc_eh','-lpthread','-Wl,-Bdynamic'],
+add_global_link_arguments('-Bstatic,--whole-archive','-lstdc++','-lgcc_eh','-lpthread')
+executable('hq', 'main.cpp',
   dependencies: [modest],include_directories : 'D:/a/_temp/msys/msys64/usr/local/include'
 )
