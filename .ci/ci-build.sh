@@ -1,5 +1,6 @@
 export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH}
-export PATH=/c/Users/runneradmin/.local/bin:/usr/local/lib:${PATH}
+export LIBRARY_PATH=/usr/local/lib:${LIBRARY_PATH}
+export PATH=/c/Users/runneradmin/.local/bin:/usr/local/bin:${PATH}
 cd Modest
 make uninstall
 make clean
