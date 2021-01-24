@@ -3,11 +3,15 @@ export PATH=/c/Users/runneradmin/.local/bin:/usr/local/lib:${PATH}
 cd Modest
 make uninstall
 make clean
-make static
-make create
+echo 清理结束
+make 
+echo 编译结束
+#make create
 make test
+echo 测试结束
 make modules
-make clone 
+echo 显示模块信息完成
+#make clone 
 make install
 
 cd ..    
