@@ -7,7 +7,8 @@ make clean
 echo 清理结束
 make 
 echo 编译结束
-#make create
+make create
+echo 准备测试
 make test
 echo 测试结束
 make modules
