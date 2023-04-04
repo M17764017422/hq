@@ -11,6 +11,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+      - name: Install meson
+        run: choco install -y --execution-timeout=0 meson
       - name: Install dependencies
         run: |
           choco install -y ninja meson
