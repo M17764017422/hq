@@ -1,0 +1,40 @@
+name: Build and Release Windows Executable
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Install meson
+        run: choco install -y --execution-timeout=0 meson
+      - name: Restart computer
+        run: |
+          echo "Restarting computer..."
+          shutdown /r /t 5
+      - name: Install dependencies
+        run: |
+          choco install -y ninja meson
+          git clone https://github.com/lexborisov/Modest.git
+          cd Modest
+          meson build
+          ninja -C build
+          ninja -C build install
+      - name: Build executable
+        run: |
+          meson build
+          ninja -C build
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            path/to/your/executable.exe
+          tag_name: v1.0.0
+          release_name: Release v1.0.0
+          body: |
+            This is the first release of our Windows executable.
