@@ -11,14 +11,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Install meson
+      - name: Install Build Dependencies
         run: |
-          choco install -y --execution-timeout=0 meson
-          echo "Restarting computer..."
-          shutdown /r /t 5
-      - name: Install dependencies
-        run: |
-          choco install -y ninja meson
+          choco install python3
+          choco install ninja
+          pip3 install meson
           git clone https://github.com/lexborisov/Modest.git
           cd Modest
           meson build
