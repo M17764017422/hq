@@ -40,6 +40,8 @@ jobs:
         git clone https://github.com/lexborisov/Modest.git
         cd Modest
         cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_USE_PTHREADS_INIT=TRUE
+        cmake -Bbuild -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=C:/Program\ Files/modest
+
         cmake --build build --config Release --target install
         cd ..
         
