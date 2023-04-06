@@ -32,9 +32,10 @@ jobs:
     - name: Install Modest
       run: |
         git clone https://github.com/lexborisov/Modest.git
-        cd Modest && mkdir build && cd build
-        cmake .. && make && make install
-        cd ../..
+        cd Modest
+          cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+          cmake --build build --config Release --target install
+          cd ..
         
     - name: Install Ninja
       run: |
