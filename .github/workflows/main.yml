@@ -1,36 +1,46 @@
-name: Build and Release Windows Executable
+name: Build HQ for Windows
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
   build:
+
     runs-on: windows-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Install Build Dependencies
-        run: |
-          choco install python3
-          choco install ninja
-          pip3 install meson
-          git clone https://github.com/lexborisov/Modest.git
-          cd Modest
-          meson build
-          ninja -C build
-          ninja -C build install
-      - name: Build executable
-        run: |
-          meson build
-          ninja -C build
-      - name: Create release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            path/to/your/executable.exe
-          tag_name: v1.0.0
-          release_name: Release v1.0.0
-          body: |
-            This is the first release of our Windows executable.
+    - name: Checkout code
+      uses: actions/checkout@v2
+      
+    - name: Install Meson
+      run: |
+        choco install python --version 3.10.0 -y
+        python -m pip install meson
+        
+    - name: Install CMake
+      run: |
+        choco install cmake -y
+        
+    - name: Install Visual Studio Build Tools
+      run: |
+        choco install visualstudio2019buildtools -y
+        choco install visualstudio2019-workload-vctools -y
+        
+    - name: Install Modest
+      run: |
+        git clone https://github.com/lexborisov/Modest.git
+        cd Modest && mkdir build && cd build
+        cmake .. && make && make install
+        cd ../..
+        
+    - name: Install Ninja
+      run: |
+        choco install ninja -y
+        
+    - name: Build HQ
+      run: |
+        meson build
+        ninja -C build
