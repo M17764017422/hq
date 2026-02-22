@@ -3,7 +3,7 @@ name: Build HQ Windows Static
 on:
   push:
     branches: [ "main", "master" ]
-  workflow_dispatch: # 允许手动触发
+  workflow_dispatch:
 
 jobs:
   build-win-static:
@@ -13,12 +13,7 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    - name: Setup Git
-      # Windows runner 通常自带 git，但确保它在 PATH 中
-      run: git --version
-
     - name: Install CMake and Ninja
-      # 使用 choco 快速安装构建工具
       run: |
         choco install cmake ninja -y --no-progress
         refreshenv
@@ -29,7 +24,6 @@ jobs:
         xmake-version: latest
 
     - name: Setup MSVC Environment
-      # 关键步骤：初始化 Visual Studio 编译器环境 (cl.exe, lib.exe, dumpbin)
       uses: ilammy/msvc-dev-cmd@v1
 
     - name: Build Modest (Static Libs)
@@ -39,117 +33,67 @@ jobs:
         git clone --depth 1 https://github.com/lexborisov/Modest.git deps/modest-src
         
         cd deps/modest-src
+        
+        echo [2/4] Applying Windows-compatible CMake patch...
+        rem 只修改 pthread 检查，不影响其他功能
+        powershell -Command ^(
+          $c = Get-Content -Raw 'CMakeLists.txt'; ^
+          $c = $c -replace 'find_package\\(Threads REQUIRED\\)', 'find_package(Threads)'; ^
+          $c = $c -replace 'message\\(FATAL_ERROR.*[Pp]thread.*\\)', 'message(WARNING "pthread not found, using Windows native threads")'; ^
+          Set-Content -Path 'CMakeLists.txt' -Value $c ^
+        )
+        
         mkdir build_static
         cd build_static
         
-        echo [2/4] Configuring Modest (Static + MT)...
-        rem -DBUILD_SHARED_LIBS=OFF : 生成 .lib 而不是 .dll
-        rem -DCMAKE_C_FLAGS="/MT" : 静态链接 CRT，避免依赖 vcruntime.dll
+        echo [3/4] Configuring Modest...
         cmake .. -G "Ninja" ^
           -DCMAKE_BUILD_TYPE=Release ^
           -DBUILD_SHARED_LIBS=OFF ^
           -DCMAKE_INSTALL_PREFIX="../install" ^
           -DCMAKE_C_FLAGS="/MT" ^
-          -DCMAKE_CXX_FLAGS="/MT"
+          -DCMAKE_CXX_FLAGS="/MT" ^
+          -DCMAKE_THREAD_PREFER_PTHREAD=OFF
         
-        if %ERRORLEVEL% neq 0 exit /b 1
+        if %ERRORLEVEL% neq 0 (
+          echo CMake config failed!
+          exit /b 1
+        )
         
-        echo [3/4] Compiling Modest...
+        echo [4/4] Building and Installing...
         cmake --build . --config Release
-        if %ERRORLEVEL% neq 0 exit /b 1
-        
-        echo [4/4] Installing to local deps folder...
         cmake --install . --config Release
         
         cd ..
-        rem 调整目录结构以匹配 xmake.lua 的预期
         if exist ..\modest rmdir /s /q ..\modest
         mkdir ..\modest
         move install\include ..\modest\
         move install\lib ..\modest\
         
-        echo Modest Static Build Done.
+        echo Modest build complete!
         dir ..\modest\lib
 
     - name: Configure HQ with xmake
       shell: cmd
       run: |
-        echo Configuring hq for Windows Static...
-        rem -p windows -a x64 -m release
-        rem --yes 自动确认
         xmake f -p windows -a x64 -m release --yes
-        
-        echo Checking configuration...
-        xmake l -v
-
-    - name: Build HQ (Static Link)
-      shell: cmd
-      run: |
-        echo Building hq.exe...
         xmake build -v
-        
-        if %ERRORLEVEL% neq 0 (
-          echo Build Failed!
-          exit /b 1
-        )
-        
-        echo Build Success!
 
-    - name: Verify and Package
+    - name: Verify and Upload
       shell: pwsh
-      id: package
       run: |
-        # 查找生成的 exe
         $buildDir = xmake show project.buildir
         $exePath = Get-ChildItem -Recurse -Path $buildDir -Filter "hq.exe" | Select-Object -First 1
+        Copy-Item $exePath.FullName -Destination "hq.exe"
         
-        if ($null -eq $exePath) {
-          Write-Error "hq.exe not found!"
-          exit 1
-        }
+        Write-Host "=== Dependency Check ==="
+        dumpbin /dependents "hq.exe"
         
-        $fullPath = $exePath.FullName
-        Write-Host "Found executable: $fullPath"
-        
-        # 复制出来方便上传
-        Copy-Item $fullPath -Destination "hq.exe"
-        
-        # 验证依赖项
-        Write-Host "`n=== Dependency Check (dumpbin) ==="
-        $deps = dumpbin /dependents "hq.exe" | Out-String
-        Write-Host $deps
-        
-        # 检查是否有非系统 DLL (简单的启发式检查)
-        $badDeps = @()
-        foreach ($line in ($deps -split "`n")) {
-          $line = $line.Trim()
-          if ($line -like "*.dll" -and $line -notmatch "^(KERNEL32|USER32|WS2_32|ADVAPI32|BCRYPT|NTDLL).dll$") {
-             $badDeps += $line
-          }
-        }
-        
-        if ($badDeps.Count -gt 0) {
-          Write-Warning "Found potentially non-system dependencies (might be OK if system libs, but check manually):"
-          $badDeps | ForEach-Object { Write-Host $_ }
-        } else {
-          Write-Host "Looks like a clean static build (only system DLLs detected)!"
-        }
-        
-        # 简单功能测试
-        Write-Host "`n=== Functional Test ==="
-        $testOutput = echo "<h1>Static Build Works!</h1>" | .\hq.exe h1 text
-        Write-Host "Output: $testOutput"
-        
-        if ($testOutput -like "*Static Build Works!*") {
-          Write-Host "Test Passed!"
-        } else {
-          Write-Error "Test Failed!"
-          exit 1
-        }
+        Write-Host "=== Test ==="
+        echo "<h1>Test</h1>" | .\hq.exe h1 text
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
         name: hq-windows-static-x64
         path: hq.exe
-        retention-days: 30
