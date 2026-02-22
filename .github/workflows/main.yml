@@ -21,7 +21,6 @@ jobs:
         cmake --version
         ninja --version
         git --version
-        xmake --version
 
     - name: Install xmake
       uses: xmake-io/github-action-setup-xmake@v1
