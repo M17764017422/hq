@@ -2,30 +2,28 @@
 set_xmakever("2.5.0")
 set_languages("c++17")
 
--- 1. 强制 fmt 静态编译
-add_requires("fmt", {configs = {shared = false}})
+-- ✅ 强制 fmt 使用 MT 静态运行时
+add_requires("fmt", {configs = {shared = false, vs_runtime = "MT"}})
 
 target("hq")
     set_kind("binary")
-    add_files("main.cpp")
+    add_files("hq.cpp")
     
     add_packages("fmt")
     
-    -- 2. 关键：Windows 下强制使用 MT 运行时 (静态链接 MSVC CRT)
+    -- ✅ Windows 静态运行时
     if is_plat("windows") then
         set_runtimes("MT")
     end
     
-    -- 3. 链接 Modest 静态库
+    -- ✅ 修改：使用 modest_a 代替单独的库
     add_links("modest_a")
     
-    -- Windows 系统库
+    -- ✅ 添加 legacy_stdio_definitions 解决 __imp_strncpy 问题
     if is_plat("windows") then
-        add_syslinks("ws2_32", "bcrypt", "advapi32")
+        add_syslinks("ws2_32", "bcrypt", "advapi32", "legacy_stdio_definitions")
     end
     
-    -- 4. 指定依赖路径 (必须与 Actions 脚本中的目录结构一致)
-    -- Actions 脚本将库放在了 deps/modest 下
     local modest_root = "$(projectdir)/deps/modest"
     add_includedirs(path.join(modest_root, "include"))
     add_linkdirs(path.join(modest_root, "lib"))
