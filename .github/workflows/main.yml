@@ -51,23 +51,19 @@ jobs:
         
         Write-Host "[2/4] Patching CMakeLists.txt for Windows..."
         
-        # 方法：逐行读取，找到并修改特定行，保持 CMake 语法完整
         $lines = Get-Content -Path 'CMakeLists.txt'
         $newLines = @()
         
         foreach ($line in $lines) {
             if ($line -match 'find_package\(Threads REQUIRED\)') {
-                # 将 REQUIRED 移除，使 Threads 变为可选
                 $newLines += $line -replace 'REQUIRED', ''
                 Write-Host "  Patched: find_package(Threads)"
             }
             elseif ($line -match 'message\(FATAL_ERROR.*[Pp]thread') {
-                # 将 FATAL_ERROR 改为 WARNING，保持语法完整
                 $newLines += $line -replace 'FATAL_ERROR', 'WARNING'
                 Write-Host "  Patched: FATAL_ERROR -> WARNING"
             }
             elseif ($line -match 'if\s*\(\s*NOT\s+CMAKE_USE_PTHREADS_INIT\s*\)') {
-                # 将 pthread 检查条件改为 FALSE，跳过整个检查块
                 $newLines += 'if(FALSE)  # Disabled for Windows'
                 Write-Host "  Patched: pthread check disabled"
             }
@@ -76,13 +72,14 @@ jobs:
             }
         }
         
-        # 写回文件（使用 UTF8 编码）
         $newLines | Set-Content -Path 'CMakeLists.txt' -Encoding UTF8
         
-        Write-Host "  Patch complete. Verifying..."
-        Select-String -Path 'CMakeLists.txt' -Pattern 'WARNING|if\(FALSE\)' | Select-Object -First 5
-        
         Set-Location ..
+        
+        # ✅ 清理并重建 build 目录
+        if (Test-Path modest-src/build_static) {
+            Remove-Item -Recurse -Force modest-src/build_static
+        }
         New-Item -ItemType Directory -Force -Path modest-src/build_static | Out-Null
         Set-Location modest-src/build_static
         
@@ -112,11 +109,16 @@ jobs:
         cmake --install . --config Release
         
         Set-Location ..
-        if (Test-Path ..\modest) { Remove-Item -Recurse -Force ..\modest }
-        New-Item -ItemType Directory -Path ..\modest\include | Out-Null
-        New-Item -ItemType Directory -Path ..\modest\lib | Out-Null
-        Move-Item -Path install\include -Destination ..\modest\
-        Move-Item -Path install\lib -Destination ..\modest\
+        
+        # ✅ 清理目标目录后再移动
+        if (Test-Path ..\modest) {
+            Remove-Item -Recurse -Force ..\modest
+        }
+        New-Item -ItemType Directory -Force -Path ..\modest | Out-Null
+        
+        # ✅ 使用 Copy-Item 并保留目录结构
+        Copy-Item -Path install\include -Destination ..\modest\include -Recurse -Force
+        Copy-Item -Path install\lib -Destination ..\modest\lib -Recurse -Force
         
         Write-Host "Modest build complete!"
         Get-ChildItem -Path ..\modest\lib
