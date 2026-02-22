@@ -79,15 +79,17 @@ jobs:
         Set-Location modest-src/build_static
         
         Write-Host "[3/4] Configuring Modest..."
+        # ✅ 关键修复：强制 CMake 使用 MT
         cmake .. `
           -G "Ninja" `
           -DCMAKE_BUILD_TYPE=Release `
           -DBUILD_SHARED_LIBS=OFF `
           -DCMAKE_INSTALL_PREFIX="../install" `
-          -DCMAKE_C_FLAGS="/MT" `
-          -DCMAKE_CXX_FLAGS="/MT" `
+          -DCMAKE_C_FLAGS="/MT /D_CRT_SECURE_NO_WARNINGS" `
+          -DCMAKE_CXX_FLAGS="/MT /D_CRT_SECURE_NO_WARNINGS" `
+          -DCMAKE_EXE_LINKER_FLAGS="/NODEFAULTLIB:msvcrt.lib" `
           -DCMAKE_THREAD_PREFER_PTHREAD=OFF
-        
+         
         if ($LASTEXITCODE -ne 0) { exit 1 }
         
         Write-Host "[4/4] Building and Installing..."
