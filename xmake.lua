@@ -17,7 +17,7 @@ target("hq")
     end
     
     -- 3. 链接 Modest 静态库
-    add_links("myhtml", "mycss", "mycore", "myencoding")
+    add_links("modest_a")
     
     -- Windows 系统库
     if is_plat("windows") then
