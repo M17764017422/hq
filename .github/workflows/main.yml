@@ -13,10 +13,15 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    - name: Install CMake and Ninja
+    # ✅ 跳过 choco 安装，使用预装工具
+    - name: Verify Preinstalled Tools
+      shell: pwsh
       run: |
-        choco install cmake ninja -y --no-progress
-        refreshenv
+        Write-Host "=== Checking Preinstalled Tools ==="
+        cmake --version
+        ninja --version
+        git --version
+        xmake --version
 
     - name: Install xmake
       uses: xmake-io/github-action-setup-xmake@v1
@@ -26,52 +31,65 @@ jobs:
     - name: Setup MSVC Environment
       uses: ilammy/msvc-dev-cmd@v1
 
+    # ✅ 添加缓存加速 Modest 编译
+    - name: Cache Modest Build
+      id: cache-modest
+      uses: actions/cache@v4
+      with:
+        path: deps/modest
+        key: modest-static-${{ runner.os }}-${{ hashFiles('deps/modest-src/**') }}
+        restore-keys: |
+          modest-static-${{ runner.os }}-
+
     - name: Build Modest (Static Libs)
-      shell: cmd
+      shell: pwsh
       run: |
-        echo [1/4] Cloning Modest...
+        if (Test-Path "deps/modest/lib/myhtml.lib") {
+          Write-Host "=== Using Cached Modest Build ==="
+          exit 0
+        }
+        
+        Write-Host "[1/4] Cloning Modest..."
         git clone --depth 1 https://github.com/lexborisov/Modest.git deps/modest-src
         
-        cd deps/modest-src
+        Set-Location deps/modest-src
         
-        echo [2/4] Applying Windows-compatible CMake patch...
-        rem 只修改 pthread 检查，不影响其他功能
-        powershell -Command ^(
-          $c = Get-Content -Raw 'CMakeLists.txt'; ^
-          $c = $c -replace 'find_package\\(Threads REQUIRED\\)', 'find_package(Threads)'; ^
-          $c = $c -replace 'message\\(FATAL_ERROR.*[Pp]thread.*\\)', 'message(WARNING "pthread not found, using Windows native threads")'; ^
-          Set-Content -Path 'CMakeLists.txt' -Value $c ^
-        )
+        Write-Host "[2/4] Patching CMakeLists.txt for Windows..."
+        $content = Get-Content -Raw -Path 'CMakeLists.txt'
+        $content = $content -replace 'find_package\(Threads REQUIRED\)', 'find_package(Threads)'
+        $content = $content -replace 'message\(FATAL_ERROR.*[Pp]thread', 'message(WARNING "pthread not found, using Windows native threads"'
+        Set-Content -Path 'CMakeLists.txt' -Value $content
         
-        mkdir build_static
-        cd build_static
+        Set-Location ..
+        New-Item -ItemType Directory -Force -Path modest-src/build_static | Out-Null
+        Set-Location modest-src/build_static
         
-        echo [3/4] Configuring Modest...
-        cmake .. -G "Ninja" ^
-          -DCMAKE_BUILD_TYPE=Release ^
-          -DBUILD_SHARED_LIBS=OFF ^
-          -DCMAKE_INSTALL_PREFIX="../install" ^
-          -DCMAKE_C_FLAGS="/MT" ^
-          -DCMAKE_CXX_FLAGS="/MT" ^
+        Write-Host "[3/4] Configuring Modest..."
+        cmake .. `
+          -G "Ninja" `
+          -DCMAKE_BUILD_TYPE=Release `
+          -DBUILD_SHARED_LIBS=OFF `
+          -DCMAKE_INSTALL_PREFIX="../install" `
+          -DCMAKE_C_FLAGS="/MT" `
+          -DCMAKE_CXX_FLAGS="/MT" `
           -DCMAKE_THREAD_PREFER_PTHREAD=OFF
         
-        if %ERRORLEVEL% neq 0 (
-          echo CMake config failed!
-          exit /b 1
-        )
+        if ($LASTEXITCODE -ne 0) { exit 1 }
         
-        echo [4/4] Building and Installing...
+        Write-Host "[4/4] Building and Installing..."
         cmake --build . --config Release
+        if ($LASTEXITCODE -ne 0) { exit 1 }
+        
         cmake --install . --config Release
         
-        cd ..
-        if exist ..\modest rmdir /s /q ..\modest
-        mkdir ..\modest
-        move install\include ..\modest\
-        move install\lib ..\modest\
+        Set-Location ..
+        if (Test-Path ..\modest) { Remove-Item -Recurse -Force ..\modest }
+        New-Item -ItemType Directory -Path ..\modest\include | Out-Null
+        New-Item -ItemType Directory -Path ..\modest\lib | Out-Null
+        Move-Item -Path install\include -Destination ..\modest\
+        Move-Item -Path install\lib -Destination ..\modest\
         
-        echo Modest build complete!
-        dir ..\modest\lib
+        Write-Host "Modest build complete!"
 
     - name: Configure HQ with xmake
       shell: cmd
@@ -84,16 +102,23 @@ jobs:
       run: |
         $buildDir = xmake show project.buildir
         $exePath = Get-ChildItem -Recurse -Path $buildDir -Filter "hq.exe" | Select-Object -First 1
+        
+        if ($null -eq $exePath) {
+          Write-Error "hq.exe not found!"
+          exit 1
+        }
+        
         Copy-Item $exePath.FullName -Destination "hq.exe"
         
         Write-Host "=== Dependency Check ==="
         dumpbin /dependents "hq.exe"
         
-        Write-Host "=== Test ==="
-        echo "<h1>Test</h1>" | .\hq.exe h1 text
+        Write-Host "=== Functional Test ==="
+        echo "<h1>Static Build OK</h1>" | .\hq.exe h1 text
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
         name: hq-windows-static-x64
         path: hq.exe
+        retention-days: 30
