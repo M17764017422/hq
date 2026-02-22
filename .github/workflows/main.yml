@@ -39,7 +39,7 @@ jobs:
     - name: Build Modest (Static Libs)
       shell: pwsh
       run: |
-        if (Test-Path "deps/modest/lib/myhtml.lib") {
+        if (Test-Path "deps/modest/lib/modest_a.lib") {
           Write-Host "=== Using Cached Modest Build ==="
           exit 0
         }
@@ -50,7 +50,6 @@ jobs:
         Set-Location deps/modest-src
         
         Write-Host "[2/4] Patching CMakeLists.txt for Windows..."
-        
         $lines = Get-Content -Path 'CMakeLists.txt'
         $newLines = @()
         
@@ -97,10 +96,6 @@ jobs:
         
         cmake --install . --config Release
         
-        # ✅ 诊断：查看实际生成的库文件
-        Write-Host "=== Installed Files ==="
-        Get-ChildItem -Path ..\install\lib -Recurse -Filter "*.lib" | ForEach-Object { Write-Host $_.FullName }
-        
         Set-Location ..
         
         if (Test-Path ..\modest) {
@@ -108,25 +103,11 @@ jobs:
         }
         New-Item -ItemType Directory -Force -Path ..\modest | Out-Null
         
-        # ✅ 复制所有库文件，保持原始结构
         Copy-Item -Path install\lib -Destination ..\modest\lib -Recurse -Force
         Copy-Item -Path install\include -Destination ..\modest\include -Recurse -Force
         
-        Write-Host "=== Final Lib Structure ==="
-        Get-ChildItem -Path ..\modest\lib -Recurse -Filter "*.lib" | ForEach-Object { Write-Host $_.FullName }
-
-    - name: Diagnose Lib Files
-      shell: pwsh
-      run: |
-        Write-Host "=== Checking deps/modest/lib ==="
-        if (Test-Path "deps/modest/lib") {
-            Get-ChildItem -Path "deps/modest/lib" -Recurse -Filter "*.lib" | ForEach-Object {
-                Write-Host "Found: $($_.FullName)"
-            }
-        } else {
-            Write-Error "deps/modest/lib does not exist!"
-            exit 1
-        }
+        Write-Host "Modest build complete!"
+        Get-ChildItem -Path ..\modest\lib -Filter "*.lib"
 
     - name: Configure HQ with xmake
       shell: cmd
