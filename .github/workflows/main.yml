@@ -1,55 +1,133 @@
-name: Build HQ for Windows
+name: Build HQ (Win Static & Linux/macOS)
 
 on:
   push:
-    branches: [main]
+    branches: [ "main" ]
   pull_request:
-    branches: [main]
+    branches: [ "main" ]
 
 jobs:
-  build:
-
+  build-windows-static:
     runs-on: windows-latest
-
+    
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
-      
-    - name: Install Meson
-      run: |
-        choco install pkgconfiglite -y
-        choco install python --version 3.10.0 -y
-        python -m pip install meson
-        
-    - name: Install CMake
-      run: |
-        choco install cmake -y
-        
-    - name: Install Visual Studio Build Tools
-      run: |
-        choco install visualstudio2019buildtools -y
-        choco install visualstudio2019-workload-vctools -y
-        
-    - name: Install Modest
-      run: |
-        choco install -y strawberryperl
-        refreshenv
-        choco install -y nasm
-        refreshenv
+      uses: actions/checkout@v4
 
-        git clone https://github.com/lexborisov/Modest.git
-        cd Modest
-        cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_USE_PTHREADS_INIT=TRUE
-        cmake -Bbuild -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=C:/Program\ Files/modest
+    - name: Setup MSVC
+      uses: ilammy/msvc-dev-cmd@v1  # 初始化 MSVC 环境变量 (cl.exe, lib.exe)
 
-        cmake --build build --config Release --target install
+    - name: Install xmake
+      uses: xmake-io/github-action-setup-xmake@v1
+      with:
+        xmake-version: latest
+
+    - name: Install Git (for cloning modest)
+      run: choco install git -y --no-progress
+
+    - name: Build Modest (Static Libs) for Windows
+      shell: cmd
+      run: |
+        echo "=== Cloning Modest ==="
+        git clone --depth 1 https://github.com/lexborisov/Modest.git deps/modest-src
+        
+        echo "=== Building Modest (Static) ==="
+        cd deps/modest-src
+        
+        rem 创建输出目录
+        mkdir build_win_static
+        cd build_win_static
+        
+        rem 配置 CMake 为静态库
+        rem -DBUILD_SHARED_LIBS=OFF 是关键
+        cmake .. -G "Ninja" ^
+          -DCMAKE_BUILD_TYPE=Release ^
+          -DBUILD_SHARED_LIBS=OFF ^
+          -DCMAKE_INSTALL_PREFIX="../install" ^
+          -DCMAKE_C_FLAGS="/MT" ^
+          -DCMAKE_CXX_FLAGS="/MT"
+        
+        cmake --build . --config Release
+        cmake --install . --config Release
+        
+        echo "=== Moving installed files to expected location ==="
         cd ..
+        mkdir install_final
+        move install install_final\modest
         
-    - name: Install Ninja
+        rem 调整目录结构以匹配 xmake.lua 中的预期 (include 和 lib 在同级或子级)
+        rem xmake.lua 期望: deps/modest/include 和 deps/modest/lib
+        mkdir ..\modest
+        move install_final\modest\include ..\modest\
+        move install_final\modest\lib ..\modest\
+        
+        echo "Build complete. Structure:"
+        dir ..\modest /s
+
+    - name: Configure HQ with xmake
+      shell: cmd
       run: |
-        choco install ninja -y
+        rem 强制使用 MT 运行时 (虽然 xmake.lua 设置了，但这里双重保险)
+        xmake f -p windows -a x64 -m release --yes
+        xmake require --list
+
+    - name: Build HQ (Static)
+      shell: cmd
+      run: |
+        xmake build -v
+
+    - name: Verify Static Linking
+      shell: pwsh
+      run: |
+        $exePath = Get-ChildItem -Recurse -Filter "hq.exe" | Select-Object -First 1 | Select-Object -ExpandProperty FullName
+        Write-Host "Found executable: $exePath"
         
+        # 检查依赖项。静态编译的 exe 应该只依赖系统核心 DLL (kernel32, user32 等)
+        # 不应该依赖 myhtml.dll, fmt.dll, vcruntime140.dll (如果是纯静态 MT)
+        Write-Host "=== Dependencies Check ==="
+        dumpbin /dependents $exePath
+        
+        # 简单运行测试
+        Write-Host "=== Running Test ==="
+        echo "<div>Hello World</div>" | & $exePath div text
+        
+        # 上传产物
+        Copy-Item $exePath -Destination "hq-windows-static.exe"
+
+    - name: Upload Windows Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: hq-windows-static-x64
+        path: hq-windows-static.exe
+
+  build-linux-macos:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install Deps (Linux)
+      if: runner.os == 'Linux'
+      run: sudo apt-get update && sudo apt-get install -y build-essential cmake git libfmt-dev libbz2-dev zlib1g-dev
+    - name: Install Deps (macOS)
+      if: runner.os == 'macOS'
+      run: brew install cmake git fmt
+    - name: Install xmake
+      uses: xmake-io/github-action-setup-xmake@v1
+    - name: Build Modest
+      run: |
+        git clone --depth 1 https://github.com/lexborisov/Modest.git deps/modest-src
+        cd deps/modest-src
+        make
+        sudo make install
+        sudo ldconfig || true
     - name: Build HQ
       run: |
-        meson build
-        ninja -C build
+        xmake f -m release --yes
+        xmake build -v
+    - name: Test
+      run: |
+        HQ_BIN=$(find $(xmake show project.buildir) -name "hq" -type f | head -n 1)
+        echo "<h1>Test</h1>" | $HQ_BIN h1 text
