@@ -57,15 +57,12 @@ jobs:
         foreach ($line in $lines) {
             if ($line -match 'find_package\(Threads REQUIRED\)') {
                 $newLines += $line -replace 'REQUIRED', ''
-                Write-Host "  Patched: find_package(Threads)"
             }
             elseif ($line -match 'message\(FATAL_ERROR.*[Pp]thread') {
                 $newLines += $line -replace 'FATAL_ERROR', 'WARNING'
-                Write-Host "  Patched: FATAL_ERROR -> WARNING"
             }
             elseif ($line -match 'if\s*\(\s*NOT\s+CMAKE_USE_PTHREADS_INIT\s*\)') {
                 $newLines += 'if(FALSE)  # Disabled for Windows'
-                Write-Host "  Patched: pthread check disabled"
             }
             else {
                 $newLines += $line
@@ -76,7 +73,6 @@ jobs:
         
         Set-Location ..
         
-        # ✅ 清理并重建 build 目录
         if (Test-Path modest-src/build_static) {
             Remove-Item -Recurse -Force modest-src/build_static
         }
@@ -91,37 +87,46 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="../install" `
           -DCMAKE_C_FLAGS="/MT" `
           -DCMAKE_CXX_FLAGS="/MT" `
-          -DCMAKE_THREAD_PREFER_PTHREAD=OFF `
-          -DTHREADS_PREFER_PTHREAD_FLAG=OFF
+          -DCMAKE_THREAD_PREFER_PTHREAD=OFF
         
-        if ($LASTEXITCODE -ne 0) {
-          Write-Error "CMake configuration failed!"
-          exit 1
-        }
+        if ($LASTEXITCODE -ne 0) { exit 1 }
         
         Write-Host "[4/4] Building and Installing..."
         cmake --build . --config Release -j $env:NUMBER_OF_PROCESSORS
-        if ($LASTEXITCODE -ne 0) {
-          Write-Error "Modest build failed!"
-          exit 1
-        }
+        if ($LASTEXITCODE -ne 0) { exit 1 }
         
         cmake --install . --config Release
         
+        # ✅ 诊断：查看实际生成的库文件
+        Write-Host "=== Installed Files ==="
+        Get-ChildItem -Path ..\install\lib -Recurse -Filter "*.lib" | ForEach-Object { Write-Host $_.FullName }
+        
         Set-Location ..
         
-        # ✅ 清理目标目录后再移动
         if (Test-Path ..\modest) {
             Remove-Item -Recurse -Force ..\modest
         }
         New-Item -ItemType Directory -Force -Path ..\modest | Out-Null
         
-        # ✅ 使用 Copy-Item 并保留目录结构
-        Copy-Item -Path install\include -Destination ..\modest\include -Recurse -Force
+        # ✅ 复制所有库文件，保持原始结构
         Copy-Item -Path install\lib -Destination ..\modest\lib -Recurse -Force
+        Copy-Item -Path install\include -Destination ..\modest\include -Recurse -Force
         
-        Write-Host "Modest build complete!"
-        Get-ChildItem -Path ..\modest\lib
+        Write-Host "=== Final Lib Structure ==="
+        Get-ChildItem -Path ..\modest\lib -Recurse -Filter "*.lib" | ForEach-Object { Write-Host $_.FullName }
+
+    - name: Diagnose Lib Files
+      shell: pwsh
+      run: |
+        Write-Host "=== Checking deps/modest/lib ==="
+        if (Test-Path "deps/modest/lib") {
+            Get-ChildItem -Path "deps/modest/lib" -Recurse -Filter "*.lib" | ForEach-Object {
+                Write-Host "Found: $($_.FullName)"
+            }
+        } else {
+            Write-Error "deps/modest/lib does not exist!"
+            exit 1
+        }
 
     - name: Configure HQ with xmake
       shell: cmd
