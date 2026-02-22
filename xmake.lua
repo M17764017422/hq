@@ -1,6 +1,6 @@
 -- xmake.lua
 set_xmakever("2.5.0")
-set_languages("c++14")
+set_languages("c++17")
 
 -- 1. 强制 fmt 静态编译
 add_requires("fmt", {configs = {shared = false}})
