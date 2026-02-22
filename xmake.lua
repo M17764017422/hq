@@ -7,7 +7,7 @@ add_requires("fmt", {configs = {runtimes = "MT"}})
 
 target("hq")
     set_kind("binary")
-    add_files("hq.cpp")
+    add_files("main.cpp")
     
     add_packages("fmt")
     
