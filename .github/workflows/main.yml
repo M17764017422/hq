@@ -13,14 +13,11 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    # ✅ 跳过 choco 安装，使用预装工具
     - name: Verify Preinstalled Tools
       shell: pwsh
       run: |
-        Write-Host "=== Checking Preinstalled Tools ==="
         cmake --version
         ninja --version
-        git --version
 
     - name: Install xmake
       uses: xmake-io/github-action-setup-xmake@v1
@@ -30,7 +27,6 @@ jobs:
     - name: Setup MSVC Environment
       uses: ilammy/msvc-dev-cmd@v1
 
-    # ✅ 添加缓存加速 Modest 编译
     - name: Cache Modest Build
       id: cache-modest
       uses: actions/cache@v4
@@ -54,10 +50,37 @@ jobs:
         Set-Location deps/modest-src
         
         Write-Host "[2/4] Patching CMakeLists.txt for Windows..."
-        $content = Get-Content -Raw -Path 'CMakeLists.txt'
-        $content = $content -replace 'find_package\(Threads REQUIRED\)', 'find_package(Threads)'
-        $content = $content -replace 'message\(FATAL_ERROR.*[Pp]thread', 'message(WARNING "pthread not found, using Windows native threads"'
-        Set-Content -Path 'CMakeLists.txt' -Value $content
+        
+        # 方法：逐行读取，找到并修改特定行，保持 CMake 语法完整
+        $lines = Get-Content -Path 'CMakeLists.txt'
+        $newLines = @()
+        
+        foreach ($line in $lines) {
+            if ($line -match 'find_package\(Threads REQUIRED\)') {
+                # 将 REQUIRED 移除，使 Threads 变为可选
+                $newLines += $line -replace 'REQUIRED', ''
+                Write-Host "  Patched: find_package(Threads)"
+            }
+            elseif ($line -match 'message\(FATAL_ERROR.*[Pp]thread') {
+                # 将 FATAL_ERROR 改为 WARNING，保持语法完整
+                $newLines += $line -replace 'FATAL_ERROR', 'WARNING'
+                Write-Host "  Patched: FATAL_ERROR -> WARNING"
+            }
+            elseif ($line -match 'if\s*\(\s*NOT\s+CMAKE_USE_PTHREADS_INIT\s*\)') {
+                # 将 pthread 检查条件改为 FALSE，跳过整个检查块
+                $newLines += 'if(FALSE)  # Disabled for Windows'
+                Write-Host "  Patched: pthread check disabled"
+            }
+            else {
+                $newLines += $line
+            }
+        }
+        
+        # 写回文件（使用 UTF8 编码）
+        $newLines | Set-Content -Path 'CMakeLists.txt' -Encoding UTF8
+        
+        Write-Host "  Patch complete. Verifying..."
+        Select-String -Path 'CMakeLists.txt' -Pattern 'WARNING|if\(FALSE\)' | Select-Object -First 5
         
         Set-Location ..
         New-Item -ItemType Directory -Force -Path modest-src/build_static | Out-Null
@@ -71,13 +94,20 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="../install" `
           -DCMAKE_C_FLAGS="/MT" `
           -DCMAKE_CXX_FLAGS="/MT" `
-          -DCMAKE_THREAD_PREFER_PTHREAD=OFF
+          -DCMAKE_THREAD_PREFER_PTHREAD=OFF `
+          -DTHREADS_PREFER_PTHREAD_FLAG=OFF
         
-        if ($LASTEXITCODE -ne 0) { exit 1 }
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "CMake configuration failed!"
+          exit 1
+        }
         
         Write-Host "[4/4] Building and Installing..."
-        cmake --build . --config Release
-        if ($LASTEXITCODE -ne 0) { exit 1 }
+        cmake --build . --config Release -j $env:NUMBER_OF_PROCESSORS
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "Modest build failed!"
+          exit 1
+        }
         
         cmake --install . --config Release
         
@@ -89,6 +119,7 @@ jobs:
         Move-Item -Path install\lib -Destination ..\modest\
         
         Write-Host "Modest build complete!"
+        Get-ChildItem -Path ..\modest\lib
 
     - name: Configure HQ with xmake
       shell: cmd
